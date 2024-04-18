@@ -1,0 +1,44 @@
+program = { bite ~ "\n"* }
+
+letter = { 'A' ..'Z' | 'a' ..'z' }
+digit = { '0' ..'9' }
+special_character = { '!'..'/' | ':'..'@' | '['..'`' | '{'..'~' }
+data_type = { "string" | "int" | "float" | "double" | "ptr" | "hardware" }
+identifier = @{ letter ~ (letter | digit)* }
+
+bite_list = { bite+ }
+bite = { variable_declaration | assignment | if_bite | while_loop | expression ~ ";" | label_declaration | for_loop }
+block = { "{" ~ bite_list ~ "}" }
+numeric_literal = @{ digit+ }
+string_literal = @{ "\"" ~ (!("\"") ~ ANY)* ~ "\"" }
+boolean_literal = { "true" | "false" }
+character = { letter | digit | special_character }
+expression = { logical_expression }
+logical_expression = { equality_expression ~ (("&&" | "||") ~ equality_expression)* }
+equality_expression = { relational_expression ~ (("==" | "!=") ~ relational_expression)* }
+relational_expression = { additive_expression ~ (("<" | ">" | "<=" | ">=") ~ additive_expression)* }
+additive_expression = { multiplicative_expression ~ (("+" | "-") ~ multiplicative_expression)* }
+multiplicative_expression = { unary_expression ~ (("*" | "/" | "%") ~ unary_expression)* }
+unary_expression = { ("+" | "-")? ~ primary_expression }
+primary_expression = { identifier | literal | "(" ~ expression ~ ")" | structure }
+
+variable_declaration = { "mov" ~ identifier ~ ("<" ~ data_type ~ ">"?)? ~ "," ~ expression ~ ";" }
+label_declaration = { identifier ~ "(" ~ parameter_list? ~ ")" ~ ":=" ~ block ~ ";" }
+assignment = { "mov" ~ identifier ~ ("<" ~ data_type ~ ">"?)? ~ "," ~ expression ~ ";" }
+parameter_list = { identifier ~ ("," ~ identifier)* }
+label_call = { identifier ~ "(" ~ argument_list? ~ ")" ~ ";" }
+argument_list = { expression ~ ("," ~ expression)* }
+if_bite = { "if" ~ "(" ~ expression ~ ")" ~ block ~ ("else" ~ block)? ~ ";" }
+for_loop = { "for" ~ "(" ~ assignment ~ "," ~ expression ~ "," ~ assignment ~ ")" ~ block ~ ";" }
+import = { "import" ~ string_literal ~ ";" }
+structure = { "struct" ~ identifier ~ "{" ~ property_list? ~ "}" ~ ";" }
+property_list = { property ~ ("," ~ property)* }
+property = { property_name ~ ":" ~ property_value }
+property_name = { identifier | string_literal | computed_property_name }
+computed_property_name = { expression }
+property_value = { expression | label_declaration }
+syscall = { "syscall" ~ "(" ~ argument_list? ~ ")" ~ ";" }
+hw = { "hw" ~ identifier ~ string_literal ~ "(" ~ argument_list? ~ ")" ~ ";" }
+
+literal = { numeric_literal | string_literal | boolean_literal }
+while_loop = { "while" ~ "(" ~ expression ~ ")" ~ block ~ ";" }
